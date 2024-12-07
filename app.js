@@ -1,128 +1,98 @@
 const { createBot, createProvider, createFlow, addKeyword } = require('@bot-whatsapp/bot')
 
-const QRPortalWeb = require('@bot-whatsapp/portal')
-const BaileysProvider = require('@bot-whatsapp/provider/baileys')
+const MetaProvider = require('@bot-whatsapp/provider/meta')
 const MockAdapter = require('@bot-whatsapp/database/mock')
 
-// Flujos de pago
-const flowPagoGeneral = (plataforma) => 
-    addKeyword(['Pagar', 'pagar']).addAnswer(
-        [
-            `Metodos de pago disponibles para *${plataforma}*:`,
-            '1. Id de Binance: 972117263',
-            '2. Paypal',
-            '3. Link Stripe',
-            '\nPor favor, realice el pago y envie un *captura* o *comprobante* del mismo aqui.',
-            'En pocos minutos estaremos procesando su solicitud y enviandole los detalles de su cuenta.',
-        ]
-    )
+/**
+ * Aqui declaramos los flujos hijos, los flujos se declaran de atras para adelante, es decir que si tienes un flujo de este tipo:
+ *
+ *          Menu Principal
+ *           - SubMenu 1
+ *             - Submenu 1.1
+ *           - Submenu 2
+ *             - Submenu 2.1
+ *
+ * Primero declaras los submenus 1.1 y 2.1, luego el 1 y 2 y al final el principal.
+ */
 
-// Flujos para cada plataforma
-const flowNetflix = addKeyword(['Netflix', 'netflix']).addAnswer(
+const flowSecundario = addKeyword(['2', 'siguiente']).addAnswer(['馃搫 Aqu铆 tenemos el flujo secundario'])
+
+const flowDocs = addKeyword(['doc', 'documentacion', 'documentaci贸n']).addAnswer(
     [
-        'La cuenta de Netflix tiene un valor de $3.5.',
-        'Escriba *Pagar* para recibir los metodos de pago.',
+        '馃搫 Aqu铆 encontras las documentaci贸n recuerda que puedes mejorarla',
+        'https://bot-whatsapp.netlify.app/',
+        '\n*2* Para siguiente paso.',
     ],
     null,
     null,
-    [flowPagoGeneral('Netflix')]
+    [flowSecundario]
 )
 
-const flowMax = addKeyword(['Max', 'max']).addAnswer(
+const flowTuto = addKeyword(['tutorial', 'tuto']).addAnswer(
     [
-        'La cuenta de Max tiene un valor de $3.0.',
-        'Escriba *Pagar* para recibir los metodos de pago.',
+        '馃檶 Aqu铆 encontras un ejemplo rapido',
+        'https://bot-whatsapp.netlify.app/docs/example/',
+        '\n*2* Para siguiente paso.',
     ],
     null,
     null,
-    [flowPagoGeneral('Max')]
+    [flowSecundario]
 )
 
-const flowPrimeVideo = addKeyword(['PrimeVideo', 'primevideo', 'Prime', 'prime']).addAnswer(
+const flowGracias = addKeyword(['gracias', 'grac']).addAnswer(
     [
-        'La cuenta de Prime Video tiene un valor de $4.0.',
-        'Escriba *Pagar* para recibir los metodos de pago.',
+        '馃殌 Puedes aportar tu granito de arena a este proyecto',
+        '[*opencollective*] https://opencollective.com/bot-whatsapp',
+        '[*buymeacoffee*] https://www.buymeacoffee.com/leifermendez',
+        '[*patreon*] https://www.patreon.com/leifermendez',
+        '\n*2* Para siguiente paso.',
     ],
     null,
     null,
-    [flowPagoGeneral('Prime Video')]
+    [flowSecundario]
 )
 
-const flowSpotify = addKeyword(['Spotify', 'spotify']).addAnswer(
-    [
-        'La cuenta de Spotify tiene un valor de $2.5.',
-        'Escriba *Pagar* para recibir los metodos de pago.',
-    ],
+const flowDiscord = addKeyword(['discord']).addAnswer(
+    ['馃お 脷nete al discord', 'https://link.codigoencasa.com/DISCORD', '\n*2* Para siguiente paso.'],
     null,
     null,
-    [flowPagoGeneral('Spotify')]
+    [flowSecundario]
 )
 
-const flowCrunchyroll = addKeyword(['Crunchyroll', 'crunchyroll']).addAnswer(
-    [
-        'La cuenta de Crunchyroll tiene un valor de $3.0.',
-        'Escriba *Pagar* para recibir los metodos de pago.',
-    ],
-    null,
-    null,
-    [flowPagoGeneral('Crunchyroll')]
-)
-
-// Flujo de selecci��n de cuentas
-const flowCuentas = addKeyword(['Cuentas', 'cuenta', 'Cuenta']).addAnswer(
-    [
-        'Selecciona que cuenta deseas contratar:',
-        '*Netflix*',
-        '*Max*',
-        '*PrimeVideo*',
-        '*Spotify*',
-        '*Crunchyroll*',
-    ],
-    null,
-    null,
-    [flowNetflix, flowMax, flowPrimeVideo, flowSpotify, flowCrunchyroll]
-)
-
-// Otros flujos
-const flowRenovar = addKeyword(['gracias', 'grac']).addAnswer(
-    [
-        'Estamos para servirte!',
-    ]
-)
-
-const flowSoporte = addKeyword(['Soporte', 'soporte']).addAnswer(
-    ['Espera un momento en linea, ya te vamos a atender.']
-)
-
-const flowPrincipal = addKeyword(['hola', 'klk', 'ola', 'Hola', 'epale', 'hey'])
-    .addAnswer('Hola, bienvenido a *FacilStreaming*.')
+const flowPrincipal = addKeyword(['hola', 'ole', 'alo'])
+    .addAnswer('馃檶 Hola bienvenido a este *Chatbot*')
     .addAnswer(
         [
-            'Escribe a continuacion como podemos ayudarte:',
-            '*Cuenta* para comprar una cuenta nueva.',
-            '*Renovar* para renovar tu cuenta.',
-            '*Soporte* para obtener ayuda.',
+            'te comparto los siguientes links de interes sobre el proyecto',
+            '馃憠 *doc* para ver la documentaci贸n',
+            '馃憠 *gracias*  para ver la lista de videos',
+            '馃憠 *discord* unirte al discord',
         ],
         null,
         null,
-        [flowCuentas, flowRenovar, flowSoporte]
+        [flowDocs, flowGracias, flowTuto, flowDiscord]
     )
 
 const main = async () => {
     const adapterDB = new MockAdapter()
     const adapterFlow = createFlow([flowPrincipal])
-    const adapterProvider = createProvider(BaileysProvider)
+
+    const adapterProvider = createProvider(MetaProvider, {
+        jwtToken: 'EAAmZAeEpf1N0BO5tsZBGn1hLHbRHyZCZBrBTLqBKxW9l8DynZBC1J7X5VhBDsXZBv0DBkiqo8zZCbxYuS4rZAbAcQTHhnru3LanfHJ1cMKJZA3in8X818mWzZCxSI01YhVPbq0FSjZB2BZBoFkLrebMUZA7GS1zTgGVAp5HxbrZCbmn54N9slBaItfwspemQjiiGppnMISL6OJl2PeevdhPJCU0k0yXV1b55kZD',
+        numberId: '492658883931661',
+        verifyToken: 'loquequieras',
+        version: 'v16.0',
+    })
 
     createBot({
         flow: adapterFlow,
         provider: adapterProvider,
         database: adapterDB,
     })
-
-    QRPortalWeb()
 }
 
 main()
+
 
 
 
